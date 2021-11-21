@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Catgirl Wallet Lookup</title>
+    <script type="module">
+        import { sources, rarities, catgirlDb, parseCatgirlsFromTransaction } from "./catgirl.mjs";
+
+        const createTableCell = (text, row, header = false) =>
+        {
+            let cell = document.createElement(header ? "td" : "th");
+            cell.innerText = text;
+            row.appendChild(cell);
+            return cell;
+        }
+
+        window.addEventListener("load", ev =>
+        {
+            document.querySelector("#form").addEventListener("submit", async submitEvent =>
+            {
+                submitEvent.preventDefault();
+                let table = document.createElement("table");
+                document.querySelector("#transactionData").innerHTML = "";
+                document.querySelector("#error_text").innerText = "";
+
+                try
+                {
+                    const catgirls = await parseCatgirlsFromTransaction(document.querySelector("#tx_hash").value);
+                    let headerRow = document.createElement("tr"); table.appendChild(headerRow);
+                    createTableCell("TokenId", headerRow);
+                    createTableCell("Name", headerRow);
+                    createTableCell("Nya Score", headerRow);
+                    createTableCell("Rarity", headerRow);
+                    createTableCell("Source", headerRow);
+                    createTableCell("Season", headerRow);
+
+
+                    for(let catgirl of catgirls)
+                    {
+                        let row = document.createElement("tr"); table.appendChild(row);
+                        createTableCell(catgirl.tokenId, row);
+                        createTableCell(catgirlDb(catgirl.season, catgirl.source, catgirl.rarity), row);
+                        createTableCell(catgirl.nyaScore, row);
+                        createTableCell(rarities(catgirl.rarity), row);
+                        createTableCell(sources(catgirl.source), row);
+                        createTableCell(catgirl.season, row);
+                    }
+
+                    document.querySelector("#transactionData").prepend(table);
+                }
+                catch(ex)
+                {
+                    document.querySelector("#error_text").innerText = ex;
+                }
+                
+            });
+        });
+    </script>
+    <style>
+        html, body {
+            background-color: #222;
+            color: #aaa;
+        }
+
+        table, th, td
+        {
+            border: 1px solid black;
+        }
+
+        th, td
+        {
+            min-width: 100px;
+        }
+
+        #error_text
+        {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <form id="form">
+        <div>
+            <label for="tx_hash"> Transaction Hash </label>
+            <input type="text" id="tx_hash" />
+            <button type="submit">Lookup</button>
+        </div>
+    </form>
+
+    <div id="error_text">
+
+    </div>
+
+    <div id="transactionData">
+
+    </div>
+</body>
+</html>
